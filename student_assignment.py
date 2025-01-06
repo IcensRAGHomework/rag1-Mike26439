@@ -105,4 +105,4 @@ def demo(question):
     return response
 
 
-print(generate_hw01("2024年台灣10月紀念日有哪些?"))
+#print(generate_hw01("2024年台灣10月紀念日有哪些?"))
