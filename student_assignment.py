@@ -83,7 +83,7 @@ def generate_hw01(question):
 
     chain = prompt | llm
     response = chain.invoke({ "question": question })
-    responseStr = extract_json(response)
+    responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
     return responseStr
     
 def generate_hw02(question):
