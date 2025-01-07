@@ -1,6 +1,7 @@
 import json
 import re
 import traceback
+import sys
 
 from model_configurations import get_model_configuration
 
@@ -72,8 +73,8 @@ def generate_hw01(question):
     [
         (
             "system",
-            "Answer the user question."
-            "Output as JSON without description."
+            "Please provide the anniversaries in Taiwan for the specified month and year in JSON format"
+            #"Output as JSON without description."
             "With one Result object which conatins multiple object with date key and event key."
         ),
         ("human", "{question}"),
@@ -83,12 +84,10 @@ def generate_hw01(question):
 
     chain = prompt | llm
     response = chain.invoke({ "question": question })
-    #responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
-    responseStr = json.dumps(extract_json(response)[0])
-    #print(responseStr)
-    #print(response.content)
-
-    #responseStr = json.dumps(response, ensure_ascii=False)
+    if sys.argv[1] == "1":
+        responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
+    else:
+        responseStr = json.dumps(extract_json(response)[0])
     return responseStr
     
 def generate_hw02(question):
@@ -117,7 +116,14 @@ def demo(question):
     response = llm.invoke([message])
     return response
 
-
+#print(sys.argv)
 #print(demo("2024年台灣10月紀念日有哪些?"))
-#generate_hw01("2024年台灣10月紀念日有哪些?")
-#print(generate_hw01("2024年台灣10月紀念日有哪些?"))
+if len(sys.argv) == 2:
+    if sys.argv[1] == "1":
+        print(generate_hw01("2024年台灣10月紀念日有哪些?"))
+    elif  sys.argv[1] == "2":
+        pass
+    elif  sys.argv[1] == "3":
+        pass
+    elif  sys.argv[1] == "4":
+        pass
