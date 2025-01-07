@@ -74,7 +74,7 @@ def generate_hw01(question):
             "system",
             "Answer the user question."
             "Output as JSON without description."
-            "With one Result object which conatins multiple object with date key and name key."
+            "With one Result object which conatins multiple object with date key and event key."
         ),
         ("human", "{question}"),
     ]
