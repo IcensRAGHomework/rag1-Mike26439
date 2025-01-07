@@ -85,6 +85,10 @@ def generate_hw01(question):
     response = chain.invoke({ "question": question })
     #responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
     responseStr = json.dumps(extract_json(response)[0])
+    #print(responseStr)
+    #print(response.content)
+
+    #responseStr = json.dumps(response, ensure_ascii=False)
     return responseStr
     
 def generate_hw02(question):
