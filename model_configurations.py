@@ -17,3 +17,6 @@ configurations = {
 
 def get_model_configuration(model_version):
     return configurations.get(model_version)
+
+def get_configuration(key):
+    return os.getenv(key)
