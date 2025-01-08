@@ -75,7 +75,7 @@ def generate_hw01(question):
             "system",
             "Please provide the anniversaries in Taiwan for the specified month and year."
             "Output as JSON without description."
-            "Only return the JSON content with date key and event key."
+            "Only return the JSON content with date key and name key."
             #"Return object "
         ),
         ("human", "{question}"),
@@ -85,13 +85,14 @@ def generate_hw01(question):
 
     chain = prompt | llm
     response = chain.invoke({ "question": question })
-    #print(response)
 
-    if sys.argv[1] == "1":
+    if len(sys.argv) == 2 and sys.argv[1] == "1":
+        print(response)
         responseStr = json.dumps({"Result": extract_json(response)[0]}, ensure_ascii=False)
         #responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
     else:
         responseStr = json.dumps({"Result": extract_json(response)[0]})
+        #print(responseStr)
     return responseStr
     
 def generate_hw02(question):
@@ -131,3 +132,5 @@ if len(sys.argv) == 2:
         pass
     elif  sys.argv[1] == "4":
         pass
+else:
+    #generate_hw01("2024年台灣10月紀念日有哪些?")
