@@ -73,7 +73,7 @@ def generate_hw01(question):
     [
         (
             "system",
-            "Please provide the anniversaries in Taiwan for the specified month and year."
+            "Please provide the only one anniversaries in Taiwan for the specified month and year."
             "Output as JSON without description."
             "Only return the JSON content with date key and name key."
             #"Return object "
@@ -85,14 +85,16 @@ def generate_hw01(question):
 
     chain = prompt | llm
     response = chain.invoke({ "question": question })
+    content = extract_json(response)[0]
 
     if len(sys.argv) == 2 and sys.argv[1] == "1":
         print(response)
-        responseStr = json.dumps({"Result": extract_json(response)[0]}, ensure_ascii=False)
+        print("\n")
+        print(content)
+        responseStr = json.dumps({"Result": content}, ensure_ascii=False)
         #responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
     else:
-        responseStr = json.dumps({"Result": extract_json(response)[0]})
-        #print(responseStr)
+        responseStr = json.dumps({"Result": content})
     return responseStr
     
 def generate_hw02(question):
@@ -121,8 +123,6 @@ def demo(question):
     response = llm.invoke([message])
     return response
 
-#print(sys.argv)
-#print(demo("2024年台灣10月紀念日有哪些?"))
 if len(sys.argv) == 2:
     if sys.argv[1] == "1":
         print(generate_hw01("2024年台灣10月紀念日有哪些?"))
@@ -133,4 +133,5 @@ if len(sys.argv) == 2:
     elif  sys.argv[1] == "4":
         pass
 else:
-    #generate_hw01("2024年台灣10月紀念日有哪些?")
+    #print(demo("2024年台灣10月紀念日有哪些?"))
+    #print(generate_hw01("2024年台灣10月紀念日有哪些?"))
