@@ -73,9 +73,10 @@ def generate_hw01(question):
     [
         (
             "system",
-            "Please provide the anniversaries in Taiwan for the specified month and year in JSON format"
-            #"Output as JSON without description."
-            "With one Result object which conatins multiple object with date key and event key."
+            "Please provide the anniversaries in Taiwan for the specified month and year in JSON format."
+            "With keys 'data' and 'name'."
+            "Only return the JSON content"
+            #"With one Result object which conatins multiple object with date key and event key."
         ),
         ("human", "{question}"),
     ]
