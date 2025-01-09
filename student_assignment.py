@@ -5,13 +5,11 @@ import sys
 
 from model_configurations import get_model_configuration
 
-from langchain_core.messages import AIMessage
 from langchain_openai import AzureChatOpenAI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
-from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.output_parsers.json import SimpleJsonOutputParser
 
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
 
@@ -19,21 +17,20 @@ from typing import List
 from pydantic import BaseModel, Field
 
 class Holiday(BaseModel):
-    """The date and name of holiday."""
+    """Information about a holiday."""
 
     date: str = Field(..., description="The date of the holiday, must be YYYY-mm-DD format")
     name: str = Field(..., description="The short name of the holiday")
 
 class Result(BaseModel):
+    """Identifying information about all holidays in specific month."""
     Result: List[Holiday]
 
 # Custom parser
 def extract_json(message: AIMessage) -> List[dict]:
     """Extracts JSON content from a string where JSON is embedded between \`\`\`json and \`\`\` tags.
-
     Parameters:
         text (str): The text containing the JSON content.
-
     Returns:
         list: A list of extracted JSON strings.
     """
@@ -51,7 +48,7 @@ def extract_json(message: AIMessage) -> List[dict]:
         raise ValueError(f"Failed to parse: {message}")
 
 # Set up a parser
-parser = PydanticOutputParser(pydantic_object=Result)
+parser = JsonOutputParser(pydantic_object=Result)
 
 ####################################################
 gpt_chat_version = 'gpt-4o'
@@ -73,42 +70,37 @@ def generate_hw01(question):
     [
         (
             "system",
-            "Please provide the only one anniversaries in Taiwan for the specified month and year."
+            "Answer the user question."
             "Output as JSON without description."
-            "Only return the JSON content with date key and name key."
-            #"Return object "
+            "Please provide the anniversaries in Taiwan for the specified month and year in JSON format"
+            "matches the given schema: \`\`\`json\n{schema}\n\`\`\`. "
+            "Make sure to wrap the answer in \`\`\`json and \`\`\` tags",
         ),
         ("human", "{question}"),
     ]
-    )
-    print(prompt.format_prompt(question=question).to_string())
+    ).partial(schema=Result.model_json_schema())
+    #print(prompt.format_prompt(question=question).to_string())
 
-    chain = prompt | llm
+    chain = prompt | llm | parser
     response = chain.invoke({ "question": question })
-    content = extract_json(response)[0]
+    responseStr = json.dumps(response, ensure_ascii=False)
+    #jsonContent = json.dumps(extract_json(response)[0])
+    #print(jsonContent)
+    if sys.argv[1] == "1":
+        print(response)
+        print(responseStr)
 
-    if len(sys.argv) == 2 and sys.argv[1] == "1":
-        print(response)
-        print("\n")
-        print(content)
-        responseStr = json.dumps({"Result": content}, ensure_ascii=False)
-        #responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
-    else:
-        print(response)
-        print("\n")
-        print(content)
-        responseStr = json.dumps({"Result": content})
     return responseStr
-    
+
 def generate_hw02(question):
     pass
-    
+
 def generate_hw03(question2, question3):
     pass
-    
+
 def generate_hw04(question):
     pass
-    
+
 def demo(question):
     llm = AzureChatOpenAI(
             model=gpt_config['model_name'],
@@ -126,6 +118,10 @@ def demo(question):
     response = llm.invoke([message])
     return response
 
+#print(sys.argv)
+#print(demo("2024年台灣10月紀念日有哪些?"))
+#generate_hw01("2024年台灣10月紀念日有哪些?")
+#print(generate_hw01("2024年台灣10月紀念日有哪些?"))
 if len(sys.argv) == 2:
     if sys.argv[1] == "1":
         print(generate_hw01("2024年台灣10月紀念日有哪些?"))
@@ -135,6 +131,3 @@ if len(sys.argv) == 2:
         pass
     elif  sys.argv[1] == "4":
         pass
-#else:
-    #print(demo("2024年台灣10月紀念日有哪些?"))
-    #print(generate_hw01("2024年台灣10月紀念日有哪些?"))
