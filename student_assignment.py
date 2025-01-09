@@ -81,7 +81,7 @@ def generate_hw01(question):
         ("human", "{question}"),
     ]
     )
-    #print(prompt.format_prompt(question=question).to_string())
+    print(prompt.format_prompt(question=question).to_string())
 
     chain = prompt | llm
     response = chain.invoke({ "question": question })
@@ -94,6 +94,9 @@ def generate_hw01(question):
         responseStr = json.dumps({"Result": content}, ensure_ascii=False)
         #responseStr = json.dumps(extract_json(response)[0], ensure_ascii=False)
     else:
+        print(response)
+        print("\n")
+        print(content)
         responseStr = json.dumps({"Result": content})
     return responseStr
     
