@@ -132,6 +132,6 @@ if len(sys.argv) == 2:
         pass
     elif  sys.argv[1] == "4":
         pass
-else:
+#else:
     #print(demo("2024年台灣10月紀念日有哪些?"))
     #print(generate_hw01("2024年台灣10月紀念日有哪些?"))
