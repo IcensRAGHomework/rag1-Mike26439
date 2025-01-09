@@ -7,12 +7,12 @@ from model_configurations import get_model_configuration
 
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
-
-from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+#import for json parser
+from langchain_core.output_parsers import JsonOutputParser
 
+#import for class
 from typing import List
 from pydantic import BaseModel, Field
 
@@ -54,9 +54,7 @@ parser = JsonOutputParser(pydantic_object=Result)
 gpt_chat_version = 'gpt-4o'
 gpt_config = get_model_configuration(gpt_chat_version)
 
-def generate_hw01(question):
-    responseStr=""
-    llm = AzureChatOpenAI(
+llm = AzureChatOpenAI(
         model=gpt_config['model_name'],
         deployment_name=gpt_config['deployment_name'],
         openai_api_key=gpt_config['api_key'],
@@ -64,6 +62,9 @@ def generate_hw01(question):
         azure_endpoint=gpt_config['api_base'],
         temperature=gpt_config['temperature']
     )
+
+def generate_hw01(question):
+    responseStr=""
 
     # Prompt
     prompt = ChatPromptTemplate.from_messages(
@@ -84,8 +85,6 @@ def generate_hw01(question):
     chain = prompt | llm | parser
     response = chain.invoke({ "question": question })
     responseStr = json.dumps(response, ensure_ascii=False)
-    #jsonContent = json.dumps(extract_json(response)[0])
-    #print(jsonContent)
     if sys.argv[1] == "1":
         print(response)
         print(responseStr)
@@ -124,7 +123,7 @@ def demo(question):
 #print(generate_hw01("2024年台灣10月紀念日有哪些?"))
 if len(sys.argv) == 2:
     if sys.argv[1] == "1":
-        print(generate_hw01("2024年台灣10月紀念日有哪些?"))
+        generate_hw01("2024年台灣10月紀念日有哪些?")
     elif  sys.argv[1] == "2":
         pass
     elif  sys.argv[1] == "3":
