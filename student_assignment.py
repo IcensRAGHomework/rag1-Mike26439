@@ -4,6 +4,7 @@ import traceback
 import sys
 
 from model_configurations import get_model_configuration
+from model_configurations import get_configuration
 
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
@@ -53,6 +54,9 @@ parser = JsonOutputParser(pydantic_object=Result)
 ####################################################
 gpt_chat_version = 'gpt-4o'
 gpt_config = get_model_configuration(gpt_chat_version)
+calendarific_api_key = (
+    get_configuration("CALENDARIFIC_API_KEY")
+)
 
 llm = AzureChatOpenAI(
         model=gpt_config['model_name'],
@@ -92,7 +96,50 @@ def generate_hw01(question):
     return responseStr
 
 def generate_hw02(question):
-    pass
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("human", "{question}"),
+        ]
+    )
+
+    functions = [
+        {
+            "name": "get_anniversaries_from_api",
+            "description": "Fetches the anniversaries for a specified country in ISO-3166 format, month, and year using the Calendarific API.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "country": {"type": "string"},
+                    "month": {"type": "integer"},
+                    "year": {"type": "integer"},
+                },
+                "required": ["country", "month", "year"],
+            }
+        }
+    ]
+    model_with_function = llm.bind(functions=functions)
+    chain = prompt | model_with_function
+    response = chain.invoke({ "question": question })
+    additional_kwargs = json.loads(json.dumps(response.additional_kwargs))
+    args = json.loads(additional_kwargs['function_call']['arguments'])
+    year = args['year']
+    month = args['month']
+    country = args['country']
+    data = get_anniversaries_from_api(country, month, year)
+    holidays = data.get("response").get("holidays")
+    parsed_holidays = [
+        {"date": holiday["date"]["iso"], "name": holiday["name"]}
+        for holiday in holidays
+    ]
+    return json.dumps(parsed_holidays)
+
+def get_anniversaries_from_api(country, month, year):
+    import requests
+
+    url = f"https://calendarific.com/api/v2/holidays?api_key={calendarific_api_key}&country={country}&year={year}&month={month}"
+    response = requests.get(url)
+    return response.json()
 
 def generate_hw03(question2, question3):
     pass
@@ -123,10 +170,10 @@ def demo(question):
 #print(generate_hw01("2024年台灣10月紀念日有哪些?"))
 if len(sys.argv) == 2:
     if sys.argv[1] == "1":
-        generate_hw01("2024年台灣10月紀念日有哪些?")
+        print(generate_hw01("2024年台灣10月紀念日有哪些?"))
     elif  sys.argv[1] == "2":
-        pass
+        print(generate_hw02("2024年台灣10月紀念日有哪些?"))
     elif  sys.argv[1] == "3":
-        pass
+        generate_hw03("2024年台灣10月紀念日有哪些?", "根據先前的節日清單，這個節日{\"date\": \"10-31\", \"name\": \"蔣公誕辰紀念日\"}是否有在該月份清單？")
     elif  sys.argv[1] == "4":
-        pass
+        generate_hw01("請問中華台北的積分是多少")
