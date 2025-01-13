@@ -55,7 +55,7 @@ parser = JsonOutputParser(pydantic_object=Result)
 gpt_chat_version = 'gpt-4o'
 gpt_config = get_model_configuration(gpt_chat_version)
 calendarific_api_key = (
-    get_configuration("CALENDARIFIC_API_KEY")
+    get_configuration("CALENDARIFIC_API_KEY") or "JnNVNp1K8XdG11hYyGnJUfM3edOwilMd"
 )
 
 llm = AzureChatOpenAI(
@@ -127,6 +127,7 @@ def generate_hw02(question):
     month = args['month']
     country = args['country']
     data = get_anniversaries_from_api(country, month, year)
+    print(data["response"]["holidays"])
 
     if True:
         # Convert and filter fetch data to json format in homework style
@@ -138,9 +139,9 @@ def generate_hw02(question):
             }
             response_array.append(item_object)
 
-        final_response_json = json.dumps(response_array)
-        final_response_json = "{ \"Result\": " + final_response_json + " }"
-        return final_response_json
+        #final_response_json = json.dumps(response_array)
+        #final_response_json = "{ \"Result\": " + final_response_json + " }"
+        return json.dumps({"Result": response_array})
     else:
         anniversaries = data.get("response").get("holidays")
         holidays = [
@@ -152,7 +153,7 @@ def generate_hw02(question):
 def get_anniversaries_from_api(country, month, year):
     import requests
 
-    url = f"https://calendarific.com/api/v2/holidays?api_key={calendarific_api_key}&country={country}&year={year}&month={month}"
+    url = f"https://calendarific.com/api/v2/holidays?api_key={calendarific_api_key}&country={country}&language=zh&year={year}&month={month}"
     response = requests.get(url)
     return response.json()
 
@@ -183,6 +184,8 @@ def demo(question):
 #print(demo("2024年台灣10月紀念日有哪些?"))
 #generate_hw01("2024年台灣10月紀念日有哪些?")
 #print(generate_hw01("2024年台灣10月紀念日有哪些?"))
+
+
 if len(sys.argv) == 2:
     if sys.argv[1] == "1":
         print(generate_hw01("2024年台灣10月紀念日有哪些?"))
