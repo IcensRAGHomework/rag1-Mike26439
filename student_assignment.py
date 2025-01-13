@@ -127,12 +127,12 @@ def generate_hw02(question):
     month = args['month']
     country = args['country']
     data = get_anniversaries_from_api(country, month, year)
-    holidays = data.get("response").get("holidays")
-    parsed_holidays = [
+    anniversaries = data.get("response").get("holidays")
+    holidays = [
         {"date": holiday["date"]["iso"], "name": holiday["name"]}
-        for holiday in holidays
+        for holiday in anniversaries
     ]
-    return json.dumps(parsed_holidays)
+    return json.dumps({"Result": holidays})
 
 def get_anniversaries_from_api(country, month, year):
     import requests
