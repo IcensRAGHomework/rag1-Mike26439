@@ -7,7 +7,7 @@ from model_configurations import get_model_configuration
 from model_configurations import get_configuration
 
 from langchain_openai import AzureChatOpenAI
-from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
+from langchain_core.messages import HumanMessage, BaseMessage, AIMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 #+++ hw1 +++
@@ -77,6 +77,8 @@ def get_by_session_id(session_id: str) -> BaseChatMessageHistory:
     return store[session_id]
 
 # --- hw3 ---
+
+import base64
 
 ####################################################
 gpt_chat_version = 'gpt-4o'
@@ -250,7 +252,39 @@ def generate_hw03(question2, question3):
                     })
 
 def generate_hw04(question):
-    pass
+    with open("baseball.png", "rb") as image_file:
+        image_data = base64.b64encode(image_file.read()).decode("utf-8")
+
+    # Define the message with an image and text
+    messages = [
+        SystemMessage(
+            content=[
+                {
+                    "type": "text",
+                    "text": "Please parse the data from the image to get the country name and point. Answer the question based on the specific country's point from the image. Only return the point.",
+                },
+            ],
+        ),
+        HumanMessage(
+            content=[
+                {"type": "text", "text": question},
+                #{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{image_data}"},
+                },
+            ],
+        )
+    ]
+    response = llm.invoke(messages)
+    #print(response.content)
+
+    return json.dumps(
+                    {
+                        "Result": {
+                            "score": int(response.content),
+                        }
+                    })
 
 def demo(question):
     llm = AzureChatOpenAI(
@@ -283,4 +317,4 @@ if len(sys.argv) == 2:
     elif  sys.argv[1] == "3":
         print(generate_hw03("2024年台灣10月紀念日有哪些?", "根據先前的節日清單，這個節日{\"date\": \"10-31\", \"name\": \"蔣公誕辰紀念日\"}是否有在該月份清單？"))
     elif  sys.argv[1] == "4":
-        generate_hw01("請問中華台北的積分是多少")
+        print(generate_hw04("請問中華台北的積分是多少"))
