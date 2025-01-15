@@ -7,13 +7,12 @@ from model_configurations import get_model_configuration
 from model_configurations import get_configuration
 
 from langchain_openai import AzureChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+#+++ hw1 +++
 #import for json parser
 from langchain_core.output_parsers import JsonOutputParser
-
-#import for class
 from typing import List
 from pydantic import BaseModel, Field
 
@@ -50,6 +49,34 @@ def extract_json(message: AIMessage) -> List[dict]:
 
 # Set up a parser
 parser = JsonOutputParser(pydantic_object=Result)
+# --- hw1 ---
+
+# +++ hw3 +++
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+
+class InMemoryHistory(BaseChatMessageHistory, BaseModel):
+    """In memory implementation of chat message history."""
+
+    messages: List[BaseMessage] = Field(default_factory=list)
+
+    def add_messages(self, messages: List[BaseMessage]) -> None:
+        """Add a list of messages to the store"""
+        self.messages.extend(messages)
+
+    def clear(self) -> None:
+        self.messages = []
+
+# Here we use a global variable to store the chat message history.
+# This will make it easier to inspect it to see the underlying results.
+store = {}
+
+def get_by_session_id(session_id: str) -> BaseChatMessageHistory:
+    if session_id not in store:
+        store[session_id] = InMemoryHistory()
+    return store[session_id]
+
+# --- hw3 ---
 
 ####################################################
 gpt_chat_version = 'gpt-4o'
@@ -95,6 +122,15 @@ def generate_hw01(question):
 
     return responseStr
 
+# +++ hw2 functions +++
+def get_anniversaries_from_api(country, month, year):
+    import requests
+
+    url = f"https://calendarific.com/api/v2/holidays?api_key={calendarific_api_key}&country={country}&language=zh&year={year}&month={month}"
+    response = requests.get(url)
+    return response.json()
+# --- hw2 functions ---
+
 def generate_hw02(question):
 
     prompt = ChatPromptTemplate.from_messages(
@@ -127,7 +163,7 @@ def generate_hw02(question):
     month = args['month']
     country = args['country']
     data = get_anniversaries_from_api(country, month, year)
-    print(data["response"]["holidays"])
+    #print(data["response"]["holidays"])
 
     if True:
         # Convert and filter fetch data to json format in homework style
@@ -150,15 +186,68 @@ def generate_hw02(question):
         ]
         return json.dumps({"Result": holidays})
 
-def get_anniversaries_from_api(country, month, year):
-    import requests
-
-    url = f"https://calendarific.com/api/v2/holidays?api_key={calendarific_api_key}&country={country}&language=zh&year={year}&month={month}"
-    response = requests.get(url)
-    return response.json()
-
 def generate_hw03(question2, question3):
-    pass
+    #print("generate_hw03")
+    hw2_data = generate_hw02(question2)
+    holidays = json.loads(hw2_data).get("Result", [])
+    #print(holidays)
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Answer the user's question."),
+        ("ai", "{holiday_list}"),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{question}"),
+    ])
+
+    chain = prompt | llm
+
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        # Uses the get_by_session_id function defined in the example
+        # above.
+        get_by_session_id,
+        input_messages_key="question",
+        history_messages_key="history",
+    )
+
+    response_has_holiday = chain_with_history.invoke(
+        {"holiday_list": holidays,
+         "question": question3},
+        config={"configurable": {"session_id": "q1"}}
+    )
+    #print(response_has_holiday.content)
+
+    response_if_need_to_add = chain_with_history.invoke(
+        {"holiday_list": holidays, 
+         "question": "If the date is not in given holiday_list please answer TRUE otherwise FALSE"},
+        config={"configurable": {"session_id": "q1"}}
+    )
+    #print(response_if_need_to_add.content)
+
+    response_add_date_reason = chain_with_history.invoke(
+        {"holiday_list": holidays, 
+        "question": "Please provider a simple reason in Chinese to descript if the date has to be added or not."},
+        config={"configurable": {"session_id": "q1"}}
+    )
+    #print(response_add_date_reason.content)
+    
+    if len(sys.argv) == 2:
+        return json.dumps(
+                    {
+                        "Result": {
+                            "add": bool(response_if_need_to_add.content),
+                            "reason": response_add_date_reason.content,
+                        }
+                    }
+                    , ensure_ascii=False)
+    else:
+        return json.dumps(
+                    {
+                        "Result": {
+                            "add": bool(response_if_need_to_add.content),
+                            "reason": response_add_date_reason.content,
+                        }
+                    })
 
 def generate_hw04(question):
     pass
@@ -192,6 +281,6 @@ if len(sys.argv) == 2:
     elif  sys.argv[1] == "2":
         print(generate_hw02("2024年台灣10月紀念日有哪些?"))
     elif  sys.argv[1] == "3":
-        generate_hw03("2024年台灣10月紀念日有哪些?", "根據先前的節日清單，這個節日{\"date\": \"10-31\", \"name\": \"蔣公誕辰紀念日\"}是否有在該月份清單？")
+        print(generate_hw03("2024年台灣10月紀念日有哪些?", "根據先前的節日清單，這個節日{\"date\": \"10-31\", \"name\": \"蔣公誕辰紀念日\"}是否有在該月份清單？"))
     elif  sys.argv[1] == "4":
         generate_hw01("請問中華台北的積分是多少")
