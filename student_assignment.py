@@ -78,7 +78,9 @@ def get_by_session_id(session_id: str) -> BaseChatMessageHistory:
 
 # --- hw3 ---
 
+# +++ hw4 +++
 import base64
+# --- hw4 ---
 
 ####################################################
 gpt_chat_version = 'gpt-4o'
@@ -268,11 +270,7 @@ def generate_hw04(question):
         HumanMessage(
             content=[
                 {"type": "text", "text": question},
-                #{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{image_data}"},
-                },
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_data}"},},
             ],
         )
     ]
