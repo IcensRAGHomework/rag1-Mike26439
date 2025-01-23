@@ -15,7 +15,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import JsonOutputParser
 from typing import List
 from pydantic import BaseModel, Field
-
+ 
 class Holiday(BaseModel):
     """Information about a holiday."""
 
